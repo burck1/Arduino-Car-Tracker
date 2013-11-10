@@ -35,10 +35,16 @@ boolean recieved_all_data = false;
 EasyTransferI2C ET;
 
 struct RECEIVE_DATA_STRUCTURE {
-  float my_lat;
-  float my_lng;
-  unsigned int my_date;
-  unsigned int my_time;
+  double lat; // gps.location.lat() : Latitude in degrees
+  double lng; // gps.location.lng() : Longitude in degrees
+  double mph; // gps.speed.mph() : Speed in miles per hour
+  unsigned int year; // gps.date.year() : Year (2000+)
+  byte month; // gps.date.month() : Month (1-12)
+  byte day; // gps.date.day() : Day (1-31)
+  byte hour; // gps.time.hour() : Hour (0-23)
+  byte minute; // gps.time.minute() : Minute (0-59)
+  byte second; // gps.time.second() : Second (0-59)
+  byte centisecond; // gps.time.centisecond() : 100ths of a second (0-99)
 };
 RECEIVE_DATA_STRUCTURE mydata;
 
@@ -102,9 +108,9 @@ void receive(int numBytes) { }
 
 boolean get_gps_data() {
   if(ET.receiveData()) {
-    Serial.print(mydata.my_lat,6);
+    Serial.print(mydata.lat,6);
     Serial.print(",");
-    Serial.print(mydata.my_lng,6);
+    Serial.print(mydata.lng,6);
     Serial.print(",");
     Serial.print(mydata.my_date);
     Serial.print(",");
@@ -175,8 +181,8 @@ void sendData() {
     client.print("Content-Length: ");
 
     // 4 for "lat," + length of non-decimal part + decimal pt + 6 decimal places
-    int thisLength = 4 + getLength(floor(mydata.my_lat)) + 1 + 6;
-    thisLength += 4 + getLength(floor(mydata.my_lng)) + 1 + 6;
+    int thisLength = 4 + getLength(floor(mydata.lat)) + 1 + 6;
+    thisLength += 4 + getLength(floor(mydata.lng)) + 1 + 6;
     thisLength += 4;
     client.println(thisLength);
 
@@ -185,8 +191,8 @@ void sendData() {
     client.println();
 
     // BODY
-    client.print("lat,"); client.println(mydata.my_lat, 6);
-    client.print("lng,"); client.println(mydata.my_lng, 6);
+    client.print("lat,"); client.println(mydata.lat, 6);
+    client.print("lng,"); client.println(mydata.lng, 6);
   }
   else {
     Serial.println("connection failed");
