@@ -28,11 +28,6 @@ void setup() {
   // Used to communicate with GPS Module
   ss.begin(GPSBaud);
 
-  mydata.my_lat = 40.114119;
-  mydata.my_lng = -88.225134;
-  mydata.my_date = 11111;
-  mydata.my_time = 11111;
-
   Wire.begin();
   ET.begin(details(mydata), &Wire);
   
@@ -46,6 +41,7 @@ void loop() {
   }
   
   if (gps.location.isUpdated()) {
+    Serial.println("GPS Updated");
     if (gps.location.isValid()) {
       mydata.my_lat = gps.location.lat();
       mydata.my_lng = gps.location.lng();

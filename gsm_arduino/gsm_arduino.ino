@@ -56,16 +56,16 @@ void setup()
   // Use LED for debugging
   pinMode(13, OUTPUT);
   
-//  boolean notConnected = true;
-//  while(notConnected) {
-//    if((gsmAccess.begin(PINNUMBER)==GSM_READY) &
-//       (gprs.attachGPRS(GPRS_APN, GPRS_LOGIN, GPRS_PASSWORD)==GPRS_READY))
-//      notConnected = false;
-//    else {
-//      Serial.println("Not connected");
-//      delay(1000);
-//    }
-//  }
+  boolean notConnected = true;
+  while(notConnected) {
+    if((gsmAccess.begin(PINNUMBER)==GSM_READY) &
+       (gprs.attachGPRS(GPRS_APN, GPRS_LOGIN, GPRS_PASSWORD)==GPRS_READY))
+      notConnected = false;
+    else {
+      Serial.println("Not connected");
+      delay(1000);
+    }
+  }
 }
 
 void loop()
@@ -77,28 +77,25 @@ void loop()
   }
   
   // for debugging
-//  if (client.available())
-//  {
-//     char c = client.read();
-//     Serial.print(c);
-//  }
+  if (client.available()) {
+     char c = client.read();
+     Serial.print(c);
+  }
 
   // if there's no net connection, but there was one last time
   // through the loop, then stop the client:
-//  if (!client.connected() && lastConnected)
-//  {
-//    client.stop();
-//  }
+  if (!client.connected() && lastConnected) {
+    client.stop();
+  }
 
   // if you're not connected, and ten seconds have passed since
   // your last connection, then connect again and send data:
-//  if(!client.connected() && ((millis() - lastConnectionTime) > postingInterval))
-//  {
-//    //sendData(sensorReading);
-//  }
+  if(!client.connected() && ((millis() - lastConnectionTime) > postingInterval)) {
+    sendData();
+  }
 
   // store the state of the connection for next time through the loop:
-//  lastConnected = client.connected();
+  lastConnected = client.connected();
 }
 
 void receive(int numBytes) { }
@@ -115,6 +112,7 @@ boolean get_gps_data() {
     return true;
   }
   else {
+//    Serial.println("No GPS Data");
     return false;
   }
 }
@@ -159,7 +157,7 @@ boolean receive_response() {
   }
 }
 
-void sendData(int thisData) {
+void sendData() {
   if (client.connect(server, 80)) {
     Serial.println("connecting...");
 
@@ -179,6 +177,7 @@ void sendData(int thisData) {
     // 4 for "lat," + length of non-decimal part + decimal pt + 6 decimal places
     int thisLength = 4 + getLength(floor(mydata.my_lat)) + 1 + 6;
     thisLength += 4 + getLength(floor(mydata.my_lng)) + 1 + 6;
+    thisLength += 4;
     client.println(thisLength);
 
     client.println("Content-Type: text/csv");
