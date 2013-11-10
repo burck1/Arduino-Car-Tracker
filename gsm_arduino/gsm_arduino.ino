@@ -59,9 +59,6 @@ void setup()
   //define handler function on receiving data
   Wire.onReceive(receive);
   
-  // Use LED for debugging
-  pinMode(13, OUTPUT);
-  
   boolean notConnected = true;
   while(notConnected) {
     if((gsmAccess.begin(PINNUMBER)==GSM_READY) &
@@ -77,9 +74,6 @@ void setup()
 void loop()
 {
   if(get_gps_data()) {
-    digitalWrite(13, HIGH);
-    delay(200);
-    digitalWrite(13, LOW);
   }
   
   // for debugging
@@ -108,17 +102,13 @@ void receive(int numBytes) { }
 
 boolean get_gps_data() {
   if(ET.receiveData()) {
-    Serial.print(mydata.lat,6);
-    Serial.print(",");
-    Serial.print(mydata.lng,6);
-    Serial.print(",");
-    Serial.print(mydata.my_date);
-    Serial.print(",");
-    Serial.println(mydata.my_time);
+      Serial.print(mydata.lat,6);Serial.print(",");Serial.print(mydata.lng,6);Serial.print(" ");
+      Serial.print(mydata.mph,2);Serial.print("mph ");
+      Serial.print(mydata.month);Serial.print("/");Serial.print(mydata.day);Serial.print("/");Serial.print(mydata.year);Serial.print(" ");
+      Serial.print(mydata.hour);Serial.print(":");Serial.print(mydata.minute);Serial.print(":");Serial.print(mydata.second);Serial.print(".");Serial.println(mydata.centisecond);
     return true;
   }
   else {
-//    Serial.println("No GPS Data");
     return false;
   }
 }
