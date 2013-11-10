@@ -77,7 +77,7 @@ void loop()
   }
   
   // for debugging
-  if (client.available()) {
+  while (client.available()) {
      char c = client.read();
      Serial.print(c);
   }
@@ -113,9 +113,80 @@ boolean get_gps_data() {
   }
 }
 
+void sendData() {
+  if (client.connect(server, 80)) {
+    Serial.println("connecting...");
+
+    // HEADER
+    client.print("PUT ");
+    client.print(path);
+    client.print("/");
+    client.print(FEEDID);
+    client.println(".csv HTTP/1.1");
+    client.println("Host: api.xively.com");
+    client.print("X-ApiKey: ");
+    client.println(APIKEY);
+    client.print("User-Agent: ");
+    client.println(USERAGENT);
+    client.print("Content-Length: ");
+
+    // 4 for "lat," + length of non-decimal part + decimal pt + 6 decimal places
+    int thisLength = 4 + getLength(floor(mydata.lat)) + 1 + 6;
+    thisLength += 4 + getLength(floor(mydata.lng)) + 1 + 6;
+    thisLength += 4;
+    
+    unsigned int n;
+    
+    char date_buffer[16];
+    n = sprintf(date_buffer, "%u/%u/%u", mydata.month, mydata.day, mydata.year);
+    thisLength += n;
+    
+    char time_buffer[16];
+    n = sprintf(time_buffer, "%u:%u:%u.%03u", mydata.hour, mydata.minute, mydata.second, mydata.centisecond);
+    thisLength += n;
+
+    // Extra to add on: found by testing
+    thisLength += 14;
+
+    client.println(thisLength);
+
+    client.println("Content-Type: text/csv");
+    client.println("Connection: close");
+    client.println();
+
+    // BODY
+    client.print("lat,"); client.println(mydata.lat, 6);
+    client.print("lng,"); client.println(mydata.lng, 6);
+    client.print("date,"); client.println(date_buffer);
+    client.print("time,"); client.println(time_buffer);
+  }
+  else {
+    Serial.println("connection failed");
+    Serial.println();
+    Serial.println("disconnecting.");
+    client.stop();
+  }
+  lastConnectionTime = millis();
+}
+
 /*
- * Set globals: server, path, and port before calling
+ * Calculates the number of digits in someValue
  */
+int getLength(int someValue)
+{
+  int digits = 1;
+  int dividend = someValue /10;
+  while (dividend > 0)
+  {
+    dividend = dividend /10;
+    digits++;
+  }
+  return digits;
+}
+
+/*
+ * Future Use : Not yet implemented
+ *
 boolean get() {
   Serial.println("connecting...");
 
@@ -152,58 +223,4 @@ boolean receive_response() {
     return false;
   }
 }
-
-void sendData() {
-  if (client.connect(server, 80)) {
-    Serial.println("connecting...");
-
-    // HEADER
-    client.print("PUT ");
-    client.print(path);
-    client.print("/");
-    client.print(FEEDID);
-    client.println(".csv HTTP/1.1");
-    client.println("Host: api.xively.com");
-    client.print("X-ApiKey: ");
-    client.println(APIKEY);
-    client.print("User-Agent: ");
-    client.println(USERAGENT);
-    client.print("Content-Length: ");
-
-    // 4 for "lat," + length of non-decimal part + decimal pt + 6 decimal places
-    int thisLength = 4 + getLength(floor(mydata.lat)) + 1 + 6;
-    thisLength += 4 + getLength(floor(mydata.lng)) + 1 + 6;
-    thisLength += 4;
-    client.println(thisLength);
-
-    client.println("Content-Type: text/csv");
-    client.println("Connection: close");
-    client.println();
-
-    // BODY
-    client.print("lat,"); client.println(mydata.lat, 6);
-    client.print("lng,"); client.println(mydata.lng, 6);
-  }
-  else {
-    Serial.println("connection failed");
-    Serial.println();
-    Serial.println("disconnecting.");
-    client.stop();
-  }
-  lastConnectionTime = millis();
-}
-
-/*
- * Calculates the number of digits in someValue
- */
-int getLength(int someValue)
-{
-  int digits = 1;
-  int dividend = someValue /10;
-  while (dividend > 0)
-  {
-    dividend = dividend /10;
-    digits++;
-  }
-  return digits;
-}
+*/
